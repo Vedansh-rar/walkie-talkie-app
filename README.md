@@ -1,8 +1,18 @@
-# Walkie-Talkie
+# Rydio
 
-A push-to-talk app: hold a button, talk, release. Everyone on the same
-"channel" (just a name you type) hears you, over WiFi or Bluetooth — no
-servers, no accounts, no internet required.
+A push-to-talk app for riders: hold a button, talk, release. Everyone on
+the same "channel" (just a name you type) hears you, over WiFi or
+Bluetooth — no servers, no accounts, no internet required for that part.
+
+On top of that, Rydio now has a full redesigned shell: a startup screen,
+Google Sign-In, and a 3-tab app (Home, Nearby Rides, Profile) with a
+**Share Ride Plan** feature for posting bike rides (or any group outing)
+that says which comms mode — Walkie Talkie or Intercom — the group will
+use. See *What's new: the Rydio redesign* below for the full tour, and
+*Google Sign-In & Firebase setup* for the one external setup step needed
+to make sign-in and ride-sharing actually work (the app builds and runs
+fine without it — those two features just show a friendly "not set up
+yet" message until you do).
 
 - **WiFi mode** — every phone on the same WiFi network or hotspot joins the
   same channel directly (UDP multicast). Works for two phones or a group,
@@ -44,9 +54,12 @@ anything else installed locally:
 5. Get that `.apk` onto your phone (email it to yourself, upload to
    Google Drive, or plug the phone in and copy it over), open it on the
    phone, and allow "install from this source" when Android asks — it's
-   unsigned by a store, just by Flutter's own debug key, so Android will
-   flag it as from an unknown source; that's expected for a
-   self-distributed APK, not a sign anything's wrong.
+   signed with this project's own throwaway `signing/rydio-release.jks`
+   key (not a Play Store key), so Android will flag it as from an unknown
+   source; that's expected for a self-distributed APK, not a sign
+   anything's wrong. Every build uses that same committed key, which is
+   also what keeps the app's SHA-1 fingerprint constant across rebuilds —
+   see *Google Sign-In & Firebase setup* for why that matters.
 
 This builds **Android only** (Bluetooth and Intercom mode both work on
 it; WiFi mode too). For iOS you need a Mac with Xcode — there's no way
@@ -156,6 +169,97 @@ release to stop.
 Intercom mode is a separate flow — see *Intercom mode* below for how to
 set up and use it, including the one extra step (a relay server) it needs
 that WiFi/Bluetooth mode don't.
+
+## What's new: the Rydio redesign
+
+The app now opens into a proper shell instead of straight into the old
+name/channel form:
+
+- **Splash screen** (`lib/screens/splash_screen.dart`) — the RYDIO
+  wordmark over a black-to-white gradient with the hand-drawn rider
+  illustration animating into place, then routes you to Login or
+  straight into the app depending on whether you're already signed in.
+- **Login screen** (`lib/screens/login_screen.dart`) — black & white
+  themed, "Continue with Google" sign-in. A successful sign-in fills
+  your name, email and photo straight from your Google account — there's
+  no separate "fill in your profile" step.
+- **App shell** (`lib/screens/app_shell.dart`) — a floating pill bottom
+  nav with exactly 3 destinations (Home, Nearby Rides, Profile) and a
+  center **+** button that opens **Share Ride Plan** from anywhere.
+  - **Home** (`lib/screens/home_tab.dart`) — a greeting header plus the
+    two big mode cards: tap **Walkie Talkie Mode** for the WiFi/Bluetooth
+    flow (`walkie_talkie_setup_screen.dart`, the old home screen content,
+    restyled), or **Inter-Com Mode** for the existing Intercom setup flow.
+  - **Nearby Rides** (`lib/screens/nearby_rides_tab.dart`) — a live feed
+    of ride plans other riders have shared.
+  - **Share Ride Plan** (`lib/screens/share_ride_plan_screen.dart`) —
+    title, description, meeting point, date/time, and a Walkie
+    Talkie/Intercom mode picker; posting it adds it to everyone's Nearby
+    Rides feed.
+  - **Profile** (`lib/screens/profile_tab.dart`) — your Google avatar,
+    name and email, plus sign out.
+
+Ride plans are stored in Cloud Firestore so they're actually shared
+between everyone using the app, not just stored on your own phone — which
+is also why Google Sign-In needs the real external setup below (there's
+no way to have a shared, multi-user feature with zero backend of any
+kind).
+
+## Google Sign-In & Firebase setup
+
+This build ships with **placeholder** Firebase credentials
+(`lib/firebase_options.dart`, `lib/services/auth_config.dart`) so the app
+compiles and the APK builds fine with no setup at all — but "Continue
+with Google" and the Nearby Rides feed need a real (free) Firebase
+project before they'll actually work. Until you do this, tapping
+"Continue with Google" shows a friendly "not set up yet" sheet with a
+"Skip for now" button, so you can still reach and demo the rest of the
+app.
+
+1. **Create a Firebase project** at
+   [console.firebase.google.com](https://console.firebase.google.com) —
+   "Add project", any name, Google Analytics is optional.
+2. **Add an Android app** to it: package name `com.example.walkie_talkie`
+   (or whatever `--org` you used in Step 1), and paste in this **fixed
+   SHA-1**:
+
+   ```
+   47:A6:F8:5F:23:65:5D:A2:B4:A9:08:E7:77:2B:C8:D7:B4:4F:DF:BF
+   ```
+
+   This is the fingerprint of the committed `signing/rydio-release.jks`
+   keystore the GitHub Actions workflow signs every build with (see
+   *Sign release builds with a fixed keystore* in `build-apk.yml`) — it's
+   the same on every rebuild, so you only ever register it once. If you
+   build locally with your own debug key instead, run
+   `./gradlew signingReport` inside `android/` and use that SHA-1 instead.
+3. Download the `google-services.json` Firebase gives you (you don't
+   need to actually place this file anywhere — this project doesn't use
+   the Gradle plugin that reads it, since `firebase_options.dart` carries
+   the same values in Dart instead).
+4. **Enable Google as a sign-in provider**: Firebase Console →
+   Authentication → Sign-in method → Google → Enable.
+5. **Enable Cloud Firestore**: Firebase Console → Firestore Database →
+   Create database → start in test mode (fine for personal/small-group
+   use; tighten the rules before sharing this widely).
+6. **Fill in the real values**:
+   - In `lib/firebase_options.dart`, replace the `android` `FirebaseOptions`
+     fields (`apiKey`, `appId`, `messagingSenderId`, `projectId`,
+     `storageBucket`) with the matching values from Project Settings →
+     your Android app, or from `google-services.json`.
+   - In `lib/services/auth_config.dart`, replace `kGoogleServerClientId`
+     with the **Web client ID** from Authentication → Sign-in method →
+     Google → "Web SDK configuration" (not the Android client ID —
+     Google Sign-In needs the Web one to produce a token Firebase can
+     verify).
+7. Commit those two files and push — the next CI build (or local
+   `flutter build apk --release`) will have working Google Sign-In and
+   shared ride plans.
+
+(The easier, more official alternative to steps 3 and 6 is installing the
+[FlutterFire CLI](https://firebase.google.com/docs/flutter/setup) and
+running `flutterfire configure` from the project root, which generates a
+real `lib/firebase_options.dart` for you automatically.)
 
 ## How it works
 

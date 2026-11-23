@@ -88,14 +88,43 @@ jobs:
           fi
           cat android/build.gradle.kts 2>/dev/null || cat android/build.gradle
 
+      - name: Sign release builds with a fixed keystore
+        # Flutter's default (no signing config at all) falls back to the
+        # debug keystore — but that one is auto-generated per-machine, and
+        # on GitHub's ephemeral runners a brand new one is generated on
+        # *every single run*, which means the app's SHA-1 fingerprint
+        # would change on every build. Google Sign-In ties its Android
+        # OAuth client to one exact SHA-1, so that would break sign-in
+        # every time this workflow re-runs. Signing with our own
+        # committed keystore instead (signing/rydio-release.jks — a
+        # throwaway "sideload" key, not a Play Store key, so committing
+        # it is fine) keeps the fingerprint constant across builds. See
+        # the README for the fixed SHA-1 value to register in Firebase.
+        run: |
+          cp signing/rydio-release.jks android/app/rydio-release.jks
+          cat >> android/app/build.gradle.kts <<'EOF'
+
+          android {
+              signingConfigs {
+                  create("release") {
+                      storeFile = file("rydio-release.jks")
+                      storePassword = "rydio123"
+                      keyAlias = "rydio"
+                      keyPassword = "rydio123"
+                  }
+              }
+              buildTypes {
+                  getByName("release") {
+                      signingConfig = signingConfigs.getByName("release")
+                  }
+              }
+          }
+          EOF
+
       - run: flutter pub get
 
       - name: Build release APK
         run: flutter build apk --release
-        # No signing config needed: Flutter's generated build.gradle signs
-        # release builds with the debug key by default, which is exactly
-        # what you want for "install this on my own phone" — just not for
-        # publishing to the Play Store.
 
       - uses: actions/upload-artifact@v4
         with:

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
-import 'screens/home_screen.dart';
+import 'screens/splash_screen.dart';
+import 'theme/app_theme.dart';
 
 class WalkieTalkieApp extends StatelessWidget {
   const WalkieTalkieApp({super.key});
@@ -8,9 +9,10 @@ class WalkieTalkieApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Walkie-Talkie',
-      theme: ThemeData(colorSchemeSeed: Colors.indigo, useMaterial3: true),
-      home: const HomeScreen(),
+      title: 'Rydio',
+      debugShowCheckedModeBanner: false,
+      theme: AppTheme.light,
+      home: const SplashScreen(),
     );
   }
 }
