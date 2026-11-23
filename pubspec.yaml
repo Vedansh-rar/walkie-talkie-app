@@ -1,0 +1,36 @@
+name: walkie_talkie
+description: Push-to-talk walkie-talkie over WiFi (local network), with a Bluetooth Classic fallback.
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.4.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # Microphone capture as a raw PCM16 stream.
+  record: ^7.2.0
+  # Real-time PCM16 playback to the speaker/earpiece.
+  flutter_pcm_sound: ^3.3.3
+  # Bluetooth Classic (RFCOMM/SPP) client + server, for the Bluetooth fallback.
+  flutter_classic_bluetooth: ^1.7.3
+  # Lets Android actually receive WiFi multicast packets.
+  flutter_multicast_lock: ^1.2.0
+  # Short random per-device ids.
+  uuid: ^4.5.1
+  # Intercom mode's internet relay connection.
+  web_socket_channel: ^3.0.3
+  # Keeps the screen on during an active intercom session.
+  wakelock_plus: ^1.2.8
+  # Remembers the relay address/channel between rides.
+  shared_preferences: ^2.3.2
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+
+flutter:
+  uses-material-design: true

@@ -1,0 +1,16 @@
+{
+  "name": "walkie-talkie-relay",
+  "version": "1.0.0",
+  "description": "Minimal WebSocket relay for Walkie-Talkie's Intercom mode. Rooms clients by the channel tag already present in every packet and forwards bytes between them — no accounts, no database, no state beyond who's currently connected.",
+  "private": true,
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "ws": "^8.18.0"
+  }
+}

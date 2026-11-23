@@ -1,0 +1,58 @@
+name: Build APK
+
+# Builds an installable Android APK with no Flutter install on your own
+# machine. Push this repo to GitHub and this runs automatically — or
+# trigger it by hand from the Actions tab ("Run workflow").
+#
+# android/ and ios/ aren't committed (see .gitignore — the README has
+# you generate them locally with `flutter create .`), so this workflow
+# generates the android/ folder itself, on GitHub's machine, every run,
+# then patches in the permissions the README's Step 2 lists by hand.
+on:
+  push:
+    branches: [main, master]
+  workflow_dispatch: {}
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+
+      - name: Scaffold the Android platform folder
+        run: flutter create . --project-name walkie_talkie --org com.example --platforms=android
+
+      - name: Add the app's permissions to the generated manifest
+        run: |
+          sed -i 's@<application@\
+              <uses-permission android:name="android.permission.INTERNET" />\
+              <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />\
+              <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />\
+              <uses-permission android:name="android.permission.CHANGE_WIFI_MULTICAST_STATE" />\
+              <uses-permission android:name="android.permission.RECORD_AUDIO" />\
+              <uses-permission android:name="android.permission.BLUETOOTH" android:maxSdkVersion="30" />\
+              <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" android:maxSdkVersion="30" />\
+              <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" android:maxSdkVersion="30" />\
+              <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />\
+              <uses-permission android:name="android.permission.BLUETOOTH_SCAN" android:usesPermissionFlags="neverForLocation" />\
+              <uses-permission android:name="android.permission.BLUETOOTH_ADVERTISE" />\
+              <application@' android/app/src/main/AndroidManifest.xml
+          cat android/app/src/main/AndroidManifest.xml
+
+      - run: flutter pub get
+
+      - name: Build release APK
+        run: flutter build apk --release
+        # No signing config needed: Flutter's generated build.gradle signs
+        # release builds with the debug key by default, which is exactly
+        # what you want for "install this on my own phone" — just not for
+        # publishing to the Play Store.
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: walkie-talkie-apk
+          path: build/app/outputs/flutter-apk/app-release.apk
