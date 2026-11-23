@@ -43,6 +43,48 @@ jobs:
               <application@' android/app/src/main/AndroidManifest.xml
           cat android/app/src/main/AndroidManifest.xml
 
+      - name: Work around flutter_pcm_sound's stale compileSdk
+        # flutter_pcm_sound's own android module still declares
+        # compileSdk 33, which no longer satisfies several AndroidX
+        # libraries the rest of the dependency graph has moved to
+        # (they need 34+) — Gradle's AAR-metadata check fails the build
+        # over this mismatch, not over anything in this app's own code.
+        # Bumping just that one plugin's compileSdk (safe: compileSdk
+        # only widens which APIs are visible at compile time) is the
+        # fix the error message itself points at. Handles both the
+        # Kotlin-DSL (.kts, current `flutter create` default) and
+        # classic Groovy root build file, whichever this Flutter
+        # version generated.
+        run: |
+          if [ -f android/build.gradle.kts ]; then
+            cat >> android/build.gradle.kts <<'EOF'
+
+          subprojects {
+              afterEvaluate {
+                  if (name == "flutter_pcm_sound") {
+                      extensions.findByType(com.android.build.gradle.LibraryExtension::class.java)?.apply {
+                          compileSdk = 36
+                      }
+                  }
+              }
+          }
+          EOF
+          elif [ -f android/build.gradle ]; then
+            cat >> android/build.gradle <<'EOF'
+
+          subprojects {
+              afterEvaluate { proj ->
+                  if (proj.name == "flutter_pcm_sound" && proj.hasProperty("android")) {
+                      proj.android {
+                          compileSdkVersion 36
+                      }
+                  }
+              }
+          }
+          EOF
+          fi
+          cat android/build.gradle.kts 2>/dev/null || cat android/build.gradle
+
       - run: flutter pub get
 
       - name: Build release APK
