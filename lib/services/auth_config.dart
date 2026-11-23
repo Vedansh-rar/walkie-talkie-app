@@ -11,6 +11,6 @@
 /// [AuthService]) until you paste in the real value. See the README's
 /// "Google Sign-In setup" section.
 const String kGoogleServerClientId =
-    'REPLACE_WITH_YOUR_FIREBASE_WEB_CLIENT_ID.apps.googleusercontent.com';
+    '196078841674-49omht3k8og0jgdnne9b97cck8eq2ctu.apps.googleusercontent.com';
 
 bool get isGoogleSignInConfigured => !kGoogleServerClientId.startsWith('REPLACE_WITH_');

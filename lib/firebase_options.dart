@@ -30,10 +30,10 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'REPLACE_WITH_YOUR_FIREBASE_API_KEY',
-    appId: '1:000000000000:android:0000000000000000000000',
-    messagingSenderId: '000000000000',
-    projectId: 'replace-with-your-project-id',
-    storageBucket: 'replace-with-your-project-id.appspot.com',
+    apiKey: 'AIzaSyByH6cVBgpZ0oWpJfp5DCQaUrynn9HUCQw',
+    appId: '1:196078841674:android:1b2e7354dd1a5fab3e1bb3',
+    messagingSenderId: '196078841674',
+    projectId: 'rydio-5b9fc',
+    storageBucket: 'rydio-5b9fc.firebasestorage.app',
   );
 }

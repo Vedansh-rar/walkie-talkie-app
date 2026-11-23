@@ -207,6 +207,8 @@ kind).
 
 ## Google Sign-In & Firebase setup
 
+> **Status:** this repo is already wired to the Firebase project `rydio-5b9fc` (Android app `com.example.walkie_talkie`, the fixed SHA-1 below registered, Google sign-in enabled, Firestore in `asia-south1` with rules allowing signed-in users to read/create `ride_plans`). The steps below are for pointing it at a *different* Firebase project.
+
 This build ships with **placeholder** Firebase credentials
 (`lib/firebase_options.dart`, `lib/services/auth_config.dart`) so the app
 compiles and the APK builds fine with no setup at all — but "Continue
