@@ -1,4 +1,4 @@
-import 'package:firebase_auth/firebase_auth.dart';
+import '../services/auth_service.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
@@ -59,7 +59,7 @@ class _ShareRidePlanScreenState extends State<ShareRidePlanScreen> {
   Future<void> _share() async {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _sharing = true);
-    final user = FirebaseAuth.instance.currentUser;
+    final user = currentUserOrNull();
     try {
       await _service.share(
         hostName: user?.displayName?.trim().isNotEmpty == true ? user!.displayName! : 'Rider',

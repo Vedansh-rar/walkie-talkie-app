@@ -1,4 +1,5 @@
-import 'package:firebase_auth/firebase_auth.dart';
+import '../services/auth_service.dart';
+import '../services/firebase_boot.dart';
 import 'package:flutter/material.dart';
 
 import '../theme/app_colors.dart';
@@ -47,9 +48,12 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
   }
 
   Future<void> _scheduleNavigation() async {
-    await Future.delayed(const Duration(milliseconds: 2200));
+    await Future.wait([
+      Future.delayed(const Duration(milliseconds: 2200)),
+      ensureFirebaseInitialized(),
+    ]);
     if (!mounted) return;
-    final loggedIn = FirebaseAuth.instance.currentUser != null;
+    final loggedIn = currentUserOrNull() != null;
     Navigator.of(context).pushReplacement(
       MaterialPageRoute(
         builder: (_) => loggedIn ? const AppShell() : const LoginScreen(),

@@ -1,4 +1,3 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 import '../services/auth_service.dart';
@@ -22,7 +21,7 @@ class ProfileTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final user = FirebaseAuth.instance.currentUser;
+    final user = currentUserOrNull();
     final name = user?.displayName?.trim().isNotEmpty == true ? user!.displayName! : 'Rider';
     final email = user?.email ?? 'Not signed in with Google';
     final initial = name.isNotEmpty ? name[0].toUpperCase() : '?';

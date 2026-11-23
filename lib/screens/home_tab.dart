@@ -1,4 +1,4 @@
-import 'package:firebase_auth/firebase_auth.dart';
+import '../services/auth_service.dart';
 import 'package:flutter/material.dart';
 
 import '../theme/app_text_styles.dart';
@@ -15,7 +15,7 @@ class HomeTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final user = FirebaseAuth.instance.currentUser;
+    final user = currentUserOrNull();
     final name = user?.displayName?.trim().isNotEmpty == true ? user!.displayName! : 'Rider';
 
     return SafeArea(

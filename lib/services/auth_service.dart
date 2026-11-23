@@ -14,16 +14,28 @@ class GoogleSignInNotConfigured implements Exception {}
 /// `authenticate()` flow — the API was rewritten from v6's `signIn()`, so
 /// this intentionally sticks close to the documented snippet rather than
 /// any older pattern).
-class AuthService {
-  AuthService({FirebaseAuth? firebaseAuth})
-      : _firebaseAuth = firebaseAuth ?? FirebaseAuth.instance;
+/// Current Firebase user, or null if nobody is signed in *or* Firebase
+/// never initialized (placeholder/failed config) — never throws.
+User? currentUserOrNull() {
+  try {
+    return FirebaseAuth.instance.currentUser;
+  } catch (_) {
+    return null;
+  }
+}
 
-  final FirebaseAuth _firebaseAuth;
+class AuthService {
+  AuthService({FirebaseAuth? firebaseAuth}) : _injected = firebaseAuth;
+
+  final FirebaseAuth? _injected;
+  // Looked up lazily so merely constructing this (e.g. as a screen field)
+  // can't throw if Firebase failed to start.
+  FirebaseAuth get _firebaseAuth => _injected ?? FirebaseAuth.instance;
   bool _googleInitialized = false;
 
   Stream<User?> get authStateChanges => _firebaseAuth.authStateChanges();
 
-  User? get currentUser => _firebaseAuth.currentUser;
+  User? get currentUser => currentUserOrNull();
 
   Future<void> _ensureGoogleInitialized() async {
     if (_googleInitialized) return;

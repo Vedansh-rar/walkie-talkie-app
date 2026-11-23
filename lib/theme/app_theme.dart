@@ -14,7 +14,6 @@ abstract class AppTheme {
         surface: AppColors.paper,
       ),
       scaffoldBackgroundColor: AppColors.paper,
-      fontFamily: AppTextStyles.body.fontFamily,
     );
 
     return base.copyWith(

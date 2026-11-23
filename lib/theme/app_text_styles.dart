@@ -12,13 +12,24 @@ import 'app_colors.dart';
 /// [GoogleFonts.getFont] rather than a `GoogleFonts.mergeOne()` call.
 abstract class AppTextStyles {
   static TextStyle wordmark({double size = 72, Color color = AppColors.paper}) {
-    return GoogleFonts.getFont(
-      'Merge One',
-      fontSize: size,
-      color: color,
-      letterSpacing: size * 0.04,
-      height: 1.0,
-    );
+    try {
+      return GoogleFonts.getFont(
+        'Merge One',
+        fontSize: size,
+        color: color,
+        letterSpacing: size * 0.04,
+        height: 1.0,
+      );
+    } catch (_) {
+      // Font unavailable (offline first launch etc.) — never crash the UI.
+      return GoogleFonts.poppins(
+        fontSize: size,
+        fontWeight: FontWeight.w800,
+        color: color,
+        letterSpacing: size * 0.04,
+        height: 1.0,
+      );
+    }
   }
 
   static TextStyle get display => GoogleFonts.poppins(
