@@ -65,15 +65,23 @@ class AudioPlayer {
     FlutterPcmSound.feed(PcmArrayInt16.fromList(samples));
   }
 
+  /// Drops anything queued but not yet handed to the native player
+  /// (used for deafen — see [PttController.setDeafened]). There's no
+  /// "flush what's already playing" call in this plugin's API, so the
+  /// last ~100ms already fed before this is called will still be heard;
+  /// this only stops anything after that point.
   void clear() {
     _queue.clear();
-    if (_ready) FlutterPcmSound.clear();
   }
 
   Future<void> dispose() async {
     _drainTimer?.cancel();
     _drainTimer = null;
-    clear();
+    _queue.clear();
+    if (_ready) {
+      await FlutterPcmSound.release();
+      _ready = false;
+    }
   }
 }
 
