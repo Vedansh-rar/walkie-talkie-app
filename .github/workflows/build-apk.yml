@@ -56,28 +56,31 @@ jobs:
         # classic Groovy root build file, whichever this Flutter
         # version generated.
         run: |
+          # Target only this one project path directly (not a `subprojects {}`
+          # loop over every module) — the template's own earlier
+          # `subprojects { evaluationDependsOn(":app") }` call forces `:app`
+          # to fully evaluate early as a side effect of evaluating sibling
+          # plugin modules, so a *new* `subprojects { afterEvaluate { } }`
+          # block that runs after that point throws "project is already
+          # evaluated" the moment it reaches `:app`. Naming just the one
+          # project we actually need to touch avoids ever calling
+          # afterEvaluate on `:app` at all.
           if [ -f android/build.gradle.kts ]; then
             cat >> android/build.gradle.kts <<'EOF'
 
-          subprojects {
-              afterEvaluate {
-                  if (name == "flutter_pcm_sound") {
-                      extensions.findByType(com.android.build.gradle.LibraryExtension::class.java)?.apply {
-                          compileSdk = 36
-                      }
-                  }
+          project(":flutter_pcm_sound").afterEvaluate {
+              extensions.findByType(com.android.build.gradle.LibraryExtension::class.java)?.apply {
+                  compileSdk = 36
               }
           }
           EOF
           elif [ -f android/build.gradle ]; then
             cat >> android/build.gradle <<'EOF'
 
-          subprojects {
-              afterEvaluate { proj ->
-                  if (proj.name == "flutter_pcm_sound" && proj.hasProperty("android")) {
-                      proj.android {
-                          compileSdkVersion 36
-                      }
+          project(":flutter_pcm_sound").afterEvaluate { proj ->
+              if (proj.hasProperty("android")) {
+                  proj.android {
+                      compileSdkVersion 36
                   }
               }
           }
